@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <div id="app"></div>
+</body>
+</html>
+<script>
+  /* 
+      整体结构
+   */
+   /* 
+      渲染函数
+      返回vdom给mount函数渲染
+      tag 标签
+      props 属性
+      children 
+    */
+   function h(tag,props,children){
+
+   }
+   /* 
+      渲染函数
+      vnode  虚拟dom
+      container 
+    */
+   function mount(vdone,container){
+
+   }
+
+   const vdom=h('div',{class:'red'},[
+     // 如果没有props 需要传入null占位
+     h('span',null,['hello'])
+   ])
+
+   mount(vdom,document.getElementById('app'))
+</script>

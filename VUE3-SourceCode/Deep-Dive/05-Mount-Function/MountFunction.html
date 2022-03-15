@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<style>
+  .red{
+    color: red;
+  }
+</style>
+<body>
+<div id="app"></div>
+</body>
+
+</html>
+<script>
+  function h(tag, props, children) {
+    // 将dom元素转换为javascript对象，返回给Mount函数处理
+    console.log('h',tag);
+    return {
+      tag,
+      props,
+      children
+    }
+  }
+  const vdom = h('div', { class: 'red' }, [
+    h('span', null, 'hello')
+  ])
+  // function mount(vnode, container) {
+  //   console.log('vnode: ', vnode);
+  //   //container 父级元素 一开始的时候是根标签App
+  //   // 取出元素的标签名并创建元素
+  //   const el = document.createElement(vnode.tag)
+  //   if (vnode.props) {
+  //     for (const key in vnode.props) {
+  //       if (Object.hasOwnProperty.call(vnode.props, key)) {
+  //         const element = vnode.props[key];
+  //         // 这里默认只设置attribute 实际上还会有prototype、事件
+  //         el.setAttribute(key, element)
+  //       }
+  //     }
+  //   }
+  //   // 处理children
+  //   if (vnode.children) {
+  //     if (typeof vnode.children === 'string') {
+  //       // 这里默认最后一级的children的值为string   实际上还有可能是h()函数
+  //       el.textContent = vnode.children
+  //     } else {
+  //       vnode.children.forEach(child => {
+  //         // 再次调用Mount函数,此时的container就是el
+  //         mount(child,el)
+  //       })
+  //     }
+  //   }
+  //   // 插入到父级元素
+  //   container.appendChild(el)
+  // }
+  // mount(vdom,document.getElementById('app'))
+</script>
