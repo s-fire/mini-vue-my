@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+
+</body>
+
+</html>
+<script>
+  // let price = 5
+  // let number = 2
+  // let total = price * number
+  // console.log(total);
+  // number = 3 
+  // console.log(total)
+  // //  当number改变的时候 total不会跟着改变
+  // // 解决办法  将计算总数的代码保存到一个函数里面，需要的时候再调用
+  // let effect = function (){
+  //   total = price * number
+  // }
+
+
+  // 步骤
+  // 1、定义track方法来执行保存effect 当想要保存effect中的代码时 则调用track
+  // 2、然后调用effect来运行计算的代码
+  // 3、trigger  调用此方法来运行所有储存了的代码
+  // 4、dep  用来储存effects
+
+  // let price = 5
+  // let number = 2
+  // let total = 0
+
+  // let effect = function () {
+  //   total = price * number
+  // }
+  // // Set不会存储重复的值，当保存两个相同的effect时，只会存一个
+  // let dep = new Set()
+  // // 定义track方法来执行保存effect 当想要保存effect中的代码时 则调用track
+  // function track() {
+  //   dep.add(effect)
+  // }
+  // // 调用trigger来运行所有储存了的代码,即重新运行计算的方法
+  // function trigger() {
+  //   dep.forEach(effect => effect())
+  // }
+  // // 执行收集依赖和方法
+  // track()
+  // trigger()
+
+
+
+  // // 如果是对象的话如何让对象的每个属性都拥有自己的依赖
+  // // 再创建一个Map depsMap 键是对象的每个属性，值是这个属性对应的dep(Map集合)
+
+  // let product = { price: 5, number: 2 }
+  // let total = 0
+
+  // let effect = function () {
+  //   total = product.price * product.number
+  // }
+  // const depsMap = new Map()
+
+  // // 为每个属性添加追踪
+  // function track(key) {
+  //   //找出属性对应的dep(Map)
+  //   let dep = depsMap.get(key)
+  //   if (!dep) {
+  //     // 如果没有 则添加一个新的dep
+  //     depsMap.set(key, (dep = new Set()))
+  //   }
+  //   // 再把对应的effect添加到新建的dep里
+  //   dep.add(effect)
+  // }
+  // // 触发对应属性的dep=>effect
+  // function trigger(key) {
+  //   //找出对应的dep
+  //   let dep = depsMap.get(key)
+  //   if (dep) {
+  //     // 存在dep  则遍历执行里面的effect
+  //     dep.forEach(effect => {
+  //       effect()
+  //     })
+  //   }
+  // }
+  // // 追踪number
+  // track('number')
+  // effect()
+  // // 改变number的值
+  // product.number = 6
+  // // 触发number的dep
+  // trigger('number')
+
+
+  //为多个对象收集依赖
+
+  let product = { price: 5, number: 2 }
+  let total = 0
+
+  let effect = function () {
+    total = product.price * product.number
+  }
+  // 定义一个targetMap 其类型为 WeakMap (key为对象)
+  const targetMap = new WeakMap()
+  // 给某个对象的某个属性添加追踪
+  function track(target, key) {
+    // 找出这个对象的depsMap
+    let depsMap = targetMap.get(target)
+    if (!depsMap) {
+      // 如果没有depsMap 则设置一个新的Map 并添加到targetMap上
+      targetMap.set(target, (depsMap = new Map()))
+    }
+    // 再找出depsMap里对应key的dep
+    let dep = depsMap.get(key)
+    if (!dep) {
+      // 如果没有 则添加一个新的dep  
+      depsMap.set(key, (dep = new Set()))
+    }
+    // 将effect加入到dep内
+    dep.add(effect)
+  }
+
+  // 为某个对象某个属性触发依赖
+  function trigger(target, key) {
+    // 找出对应的depsMap
+    let depsMap = targetMap.get(target)
+    if (!depsMap) {
+      // 如果没有depsMap 直接返回
+      return
+    }
+    // 找出对应的dep
+    let dep = depsMap.get(key)
+    if (dep) {
+      dep.forEach(effect => {
+        effect()
+      })
+    }
+  }
+  track(product,'number')
+  effect()
+  product.number=7
+  trigger(product,'number')
+
+</script>

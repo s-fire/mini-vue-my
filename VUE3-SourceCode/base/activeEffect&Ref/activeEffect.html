@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+
+</body>
+
+</html>
+<script>
+  // 结合proxy章节里的代码
+  function reactive(target) {
+    const handle = {
+      get(target, key, receiver) {
+        // 追踪对应的对象和属性
+        track(target, key)
+        return Reflect.get(target, key, receiver)
+      },
+      set(target, key, value, receiver) {
+        let oldValue = target[key]
+        // 这里需要先设置完值再去触发trigger 否则还是拿老的值进行计算,响应式之后得到的是上一次的值
+        let result = Reflect.set(target, key, value, receiver)
+        if (oldValue !== value) {
+          trigger(target, key)
+        }
+        return result
+      }
+    }
+    return new Proxy(target, handle)
+  }
+  let targetMap = new WeakMap()
+
+
+  // function track(target,key){
+  //   let dep = new Set()
+  //   let depsMap = new Map()
+  //   // 从tatgetMap里面找到target的depsMap
+  //   depsMap = targetMap.get(target)
+  //   if (!depsMap) {
+  //     // 如果没有target的depsMap,则添加一个空的map集合
+  //     targetMap.set(target,(depsMap = new Map()))
+  //   }
+  //   // 再从depsMap里找到key的dep
+  //   dep= depsMap.get(key)
+  //   if (!dep) {
+  //     depsMap.set(key,(dep=new Set()))
+  //   }
+  //   dep.add(effect)
+  // }
+
+
+  // 触发响应
+  function trigger(target, key) {
+    // 从targetMap里面找到target的depsMap
+    let depsMap = targetMap.get(target)
+    let dep = new Set()
+    if (!depsMap) {
+      return
+    }
+    // 再从depsMap里找到key对应的dep
+    dep = depsMap.get(key)
+    if (dep) {
+      dep.forEach(effect => {
+        effect()
+      })
+    }
+  }
+
+  // const product = reactive({ price: 5, num: 10 })
+  // let total = 0
+  // const effect = () => {
+  //   total = product.price
+  // }
+  // // effect()
+  // console.log(total);
+  // product.num = 20
+  // console.log('更新后的num', product.num);
+  // console.log(targetMap);
+  // console.log(total);
+
+
+  // 这里会有一个问题 只要访问了product的属性，都会把effect添加到targetMap里面去
+  // 正确的情况应该是只有在effect函数里面访问了属性时才需要添加到target里面去
+
+  // 为了解决这个问题  引入activeEffect  表示正在运行的effect
+  let activeEffect = null
+  // 改造effect函数,把原来的effect函数当做参数传进来
+  function effect(eff) {
+    // 把穿进来的effect设为当前运行的effect
+    activeEffect = eff
+    // 执行这个effect
+    activeEffect()
+    // 最后把当前执行的effect置空
+    activeEffect = null
+  }
+  // 改造track函数
+  function track(target, key) {
+    let dep = new Set()
+    let depsMap = new Map()
+    if (activeEffect) {
+      // 如果是有当前运行的effect 才进行追踪
+      depsMap = targetMap.get(target)
+      if (!depsMap) {
+        targetMap.set(target, (depsMap = new Map()))
+      }
+      dep = depsMap.get(key)
+      if (!dep) {
+        depsMap.set(key, (dep = new Set()))
+      }
+      // 添加的也是当期那的追踪函数
+      dep.add(activeEffect)
+    }
+  }
+
+
+  // 改造之前的effect,此时effect是一个函数  直接调用,并且不需要手动调用effect了
+  const product = reactive({ price: 5, num: 10 })
+  let total = 0
+  // const effect = ()=>{
+  //   total= product.price* product.num
+  // }
+  // effect()
+  // 如果在定义一个salePrice,依赖于price
+  let salePrice = 0
+  effect(() => {
+    total = salePrice * product.num
+  })
+  effect((() => {
+    salePrice = product.price * 0.9
+  }))
+  // 由于salePrice不是响应式的，所以total的值是0
+  console.log(total);
+  console.log(salePrice);
+</script>

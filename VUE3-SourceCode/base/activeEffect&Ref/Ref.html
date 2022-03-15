@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+
+</body>
+
+</html>
+<script>
+  function reactive(target) {
+    const handle = {
+      get(target, key, receiver) {
+        track(target, key)
+        return Reflect.get(target, key, receiver)
+      },
+      set(target, key, value, receiver) {
+        let oldValue = target[key]
+        let result = Reflect.set(target, key, value, receiver)
+        if (oldValue !== value) {
+          trigger(target, key)
+        }
+        return result
+      }
+    }
+    return new Proxy(target, handle)
+  }
+
+  function trigger(target, key) {
+    let depsMap = targetMap.get(target)
+    let dep = new Set()
+    if (!depsMap) {
+      return
+    }
+    dep = depsMap.get(key)
+    if (dep) {
+      dep.forEach(effect => {
+        effect()
+      })
+    }
+  }
+  let targetMap = new WeakMap()
+  let activeEffect = null
+  function effect(eff) {
+    activeEffect = eff
+    activeEffect()
+    activeEffect = null
+  }
+  function track(target, key) {
+    let dep = new Set()
+    let depsMap = new Map()
+    if (activeEffect) {
+      depsMap = targetMap.get(target)
+      if (!depsMap) {
+        targetMap.set(target, (depsMap = new Map()))
+      }
+      dep = depsMap.get(key)
+      if (!dep) {
+        depsMap.set(key, (dep = new Set()))
+      }
+      dep.add(activeEffect)
+    }
+  }
+
+  const product = reactive({ price: 5, num: 10 })
+  let total = 0
+
+  /*   // 问题:
+    // 定义一个salePrice,依赖于price
+    let salePrice = 0
+    effect(() => {
+      total = salePrice * product.num
+    })
+    effect((() => {
+      salePrice = product.price * 0.9
+    }))
+    console.log(total);
+    // 由于salePrice不是响应式，所以这里的total值为0
+    console.log(salePrice);   // 4.5 */
+
+
+  // 这里可以使用Ref来定义salePrice
+  function ref(raw) {
+    // 定义一个对象，通过对象访问器设置value属性，值就是传进来的内容
+    const r = {
+      get value() {
+        // 调用追踪函数
+        track(r, 'value')
+        return raw
+      },
+      set value(newValue) {
+        if (newValue !== raw) {
+          raw = newValue
+          trigger(r, 'value')
+        }
+      }
+    }
+    return r
+  }
+
+  let salePrice = ref(0)
+  console.log('salePrice: ', salePrice);
+  effect(() => {
+    total = salePrice.value * product.num
+  })
+  effect(() => {
+    salePrice.value = product.price * 0.9
+  })
+  console.log(total);
+  product.num=20
+  console.log(total);
+  product.price =20
+  console.log(total); 
+  // 由于salePrice不是响应式，所以这里的total值为0
+  console.log(salePrice.value);
+</script>

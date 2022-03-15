@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+
+</body>
+
+</html>
+<script>
+  // const product = {price:5,num:3}
+  // const proxyProduct = new Proxy(product,{
+  //   get(){
+  //     console.log('触发get函数')
+  //     return '没有值'
+  //   }
+  // })
+  // console.log(proxyProduct.num);
+  // // 触发get函数
+  // // 没有值
+
+  // const product = {price:5,num:3}
+  // const proxyProduct = new Proxy(product,{
+  //   get(target,key){
+  //     console.log('触发get函数 key值为:',key)
+  //     return target[key]
+  //   }
+  // })
+  // console.log(proxyProduct.num);
+  // // 触发get函数 key值为: num
+  // // 3
+
+  // // vue3里使用 reflect 获取对象的值并返回,此时get函数里会多出一个receiver 传给reflect调用
+  // const product = { price: 5, num: 3 }
+  // const proxyProduct = new Proxy(product, {
+  //   get(target, key, receiver) {
+  //     console.log('触发get函数 key值为:', key)
+  //     /* 使用reflect的原因是确保当对象有继承自其他对象的属性或函数时this能正确的指向
+  //     避免在vue2中的一些响应式警告 */
+  //     return Reflect.get(target, key, receiver)
+  //   }
+  // })
+  // console.log(proxyProduct.num);
+  // // 触发get函数 key值为: num
+  // // 3
+
+
+  /*   // 代理set
+    const product = { price: 5, num: 3 }
+    const proxyProduct = new Proxy(product,{
+      get(target,key,receiver){
+        console.log('触发get函数 key值为:', key);
+        return Reflect.get(target,key,receiver)
+      },
+      set(target,key,value,receiver){
+        console.log('触发set函数',key,value);
+        return Reflect.set(target,key,value,receiver)
+      }
+    })
+    proxyProduct.price = 7
+    console.log(proxyProduct.price);
+    // 触发set函数 price 7
+    // 触发get函数 key值为: price
+    // 7 */
+
+  // 封装成vue3中的reactive
+
+/*   function reactive(target) {
+    //将get和set方法封装成一个对象
+    const handle = {
+      get(target, key, receiver) {
+        console.log('触发get函数 key值为:', key);
+        return Reflect.get(target, key, receiver)
+      },
+      set(target, key, value, receiver) {
+        console.log('触发set函数', key, value);
+        return Reflect.set(target, key, value, receiver)
+      }
+    }
+    // 返回一个新的Proxy对象
+    return new Proxy(target, handle)
+  }
+  const product = reactive({ price: 5, num: 3 })
+  product.price = 8
+  console.log(product.price);
+  // 触发set函数 price 8
+  // 触发get函数 key值为: price
+  // 8 */
+
+
+  // 结合reactive章节里的代码
+  function reactive(target){
+    const handle = {
+      get(target,key,receiver){
+        // 追踪对应的对象和属性
+        track(target,key)
+        return Reflect.get(target,key,receiver)
+      },
+      set(target,key,value,receiver){
+        let oldValue = target[key]
+        // 这里需要先设置完值再去触发trigger 否则还是拿老的值进行计算,响应式之后得到的是上一次的值
+        let result = Reflect.set(target,key,value,receiver)
+        if (oldValue !== value) {
+          trigger(target,key)
+        }
+        return result
+      }
+    }
+    return new Proxy(target,handle)
+
+  }
+  let targetMap = new WeakMap()
+  function track(target,key){
+    let dep = new Set()
+    let depsMap = new Map()
+    // 从tatgetMap里面找到target的depsMap
+    depsMap = targetMap.get(target)
+    if (!depsMap) {
+      // 如果没有target的depsMap,则添加一个空的map集合
+      targetMap.set(target,(depsMap = new Map()))
+    }
+    // 再从depsMap里找到key的dep
+    dep= depsMap.get(key)
+    if (!dep) {
+      depsMap.set(key,(dep=new Set()))
+    }
+    dep.add(effect)
+  }
+  // 触发响应
+  function trigger (target,key){
+    // 从targetMap里面找到target的depsMap
+    let depsMap = targetMap.get(target)
+    let dep = new Set()
+    if (!depsMap) {
+      return
+    }
+    // 再从depsMap里找到key对应的dep
+    dep = depsMap.get(key)
+    if (dep) {
+      dep.forEach(effect=>{
+        effect()
+      })      
+    }
+    
+  }
+
+  const product = reactive({price:5,num:10})
+  let total =0
+  const effect = ()=>{
+    total= product.price* product.num
+  }
+  effect()
+  console.log(total);
+  product.num=20
+  console.log(total);
+</script>

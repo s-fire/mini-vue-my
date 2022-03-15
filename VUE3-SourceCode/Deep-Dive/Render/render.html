@@ -1,0 +1,123 @@
+
+<script src="https://unpkg.com/vue"></script>
+<style>
+  .mt-4{
+    margin-left: 10px;
+  }
+</style>
+  <div id="app">
+
+  </div>
+<script>
+  const {h,createApp} = Vue
+  // const App ={
+  //   render(){
+  //     // 返回一个javascript(虚拟dom) 对象给渲染器
+  //     return h('div',{
+  //       id:'hello'
+  //     },[
+  //       h('span','world')
+  //     ])
+  //   }
+  //   // 相当于 
+  //   // <div id='hello'>
+  //   //   <span>world</span>
+  //   // </div>
+  // }
+
+//  实现layOut布局里的row组件
+//  普通的template模板无法遍历插槽内的每个项目,用render函数方便实现
+  // <Row size='4'>
+  //   <div class= 'mt-4'>hello</div>
+  //   <Row size='4'>
+  //     <div class= 'mt-4'>hello</div>
+  //   </Row>
+  // </Row>
+
+  const Row = {
+    // 这里需要先定义props
+    props:['size'], 
+    render() {
+      const slot = this.$slots.default ? this.$slots.default() : []
+      console.log('slot: ', slot);
+      return h('div',{class:'row'},slot.map(child=>{
+        console.log('this',this);
+        return h('div',{class:`mt-${this.$props.size}`},[child])
+      }))
+    }
+  }
+  const App = {
+    components:{
+      Row
+    },
+    template:`
+      <Row size='4'>
+      <div>hello</div>
+      <Row size='4'>
+        <div>hello</div>
+        <div>hello</div>
+        <div>hello</div>
+        <div>hello</div>
+        <Row size='4'>
+          <div>hello</div>
+          <div>hello</div>
+          <div>hello</div>
+          <div>hello</div>
+        </Row>
+      </Row>
+    </Row>
+    `
+  }
+  createApp(App).mount('#app')
+</script>
+
+<!-- <script src="https://unpkg.com/vue"></script>
+<style>
+    .mt-4 {
+        margin: 10px;
+    }
+</style>
+
+<div id="app"></div>
+
+<script>
+    const {h, createApp} = Vue
+
+    // 定义 Stack 组件
+    const Stack = {
+        props: ['size'], // 视频中尤大貌似没有指明 props
+        render() {
+            // 获取默认插槽
+            const slot = this.$slots.default
+                ? this.$slots.default()
+                : []
+
+            // 将插槽中的所有内容套上 div，并且读取 props 上的 size 属性，
+            // 并构成类名
+            return h('div', {class: 'stack'}, slot.map(child => {
+                return h('div', {class: `mt-${this.$props.size}`}, [
+                    child
+                ])
+            }))
+        }
+    }
+
+    // App 组件
+    const App = {
+        template: `
+            <Stack size="4">
+            <div>hello</div>
+            <Stack size="4">
+                <div>hello</div>
+                <div>hello</div>
+            </Stack>
+            </Stack>
+        `,
+        components: {
+            Stack
+        }
+    }
+
+    // 创建 vue 实例并挂载到 DOM 上
+    createApp(App).mount('#app')
+</script> -->

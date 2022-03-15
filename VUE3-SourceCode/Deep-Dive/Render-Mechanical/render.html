@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+
+</body>
+
+</html>
+<script>
+  // 可以自定义渲染逻辑，包括可以渲染IOS和安卓页面
+  // 在使用template模板语法受限的时候可以直接使用render函数进行渲染
+  /*
+    Vue2 API
+    render(h) {
+    return h('div',{
+      attrs:{
+        id:'foo'
+      },
+      on:{
+        click:this.onClick
+        }
+      },'hello')
+    }
+
+
+
+    Vue3 API
+    import {h} from 'vue'
+    render(){
+      return h('div',{
+        id:foo,
+        onClick:this.onClick
+      },hello)
+    }
+    主要把props给扁平化了
+    在传递的配置中，如果Key 在原生DOM中是属性 则设置为prototype,如果不存在就设置为attribute
+    带on的会自动绑定为监听事件
+  */
+</script>
