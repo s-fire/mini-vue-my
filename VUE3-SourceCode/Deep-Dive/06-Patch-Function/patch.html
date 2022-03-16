@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<style>
+  .red{
+    color: red;
+  }
+  .green{
+    color: green;
+  }
+</style>
+<body>
+<div id="app"></div>
+</body>
+
+</html>
+<script>
+  function h(tag, props, children) {
+    // 将dom元素转换为javascript对象，返回给Mount函数处理
+    return {
+      tag,
+      props,
+      children
+    }
+  }
+  const vdom = h('div', { class: 'red' }, [
+    h('span', null, 'hello')
+  ])
+  function mount(vnode, container) {
+    //container 父级元素 一开始的时候是根标签App
+    // 取出元素的标签名并创建元素
+    // 这里把创建好的真实dom添加到vnode.el上是为了下面的Patch时可以访问到旧节点的真实dom树
+    const el = vnode.el = document.createElement(vnode.tag)
+    if (vnode.props) {
+      for (const key in vnode.props) {
+        if (Object.hasOwnProperty.call(vnode.props, key)) {
+          const element = vnode.props[key];
+          // 这里默认只设置attribute 实际上还会有prototype、事件
+          el.setAttribute(key, element)
+        }
+      }
+    }
+    // 处理children
+    if (vnode.children) {
+      if (typeof vnode.children === 'string') {
+        // 这里默认最后一级的children的值为string   实际上还有可能是h()函数
+        el.textContent = vnode.children
+      } else {
+        vnode.children.forEach(child => {
+          if (typeof(child)==='string') {
+            // 如果直接是string 则表示这是该标签内的文字内容
+            el.innerText=child
+          }else{
+            // 再次调用Mount函数,此时的container就是el
+            mount(child,el)
+          }
+        })
+      }
+    }
+    // 插入到父级元素
+    container.appendChild(el)
+  }
+  mount(vdom,document.getElementById('app'))
+
+
+  // patch
+  /* 
+    n1 oldTag
+    n2 newTag
+  */
+  function patch(n1,n2){
+    if (n1.tag===n2.tag) {
+      // 取出元素 此时的n1就是上面Mount函数里的vdom 上面的el属性是mount函数执行时保存的真实dom树
+      // 这里再把旧的el赋值给新节点的el  因为在下次更新的时候此时的新节点已经变成了旧节点
+      const el=n2.el =n1.el
+      // 如果是相同标签的元素
+      // 处理props
+      const oldProps=n1.props
+      const newProps=n2.props
+      // 此时的新旧两个props都是一个对象,需要比较两个对象属性的差别
+      // 遍历新节点的props
+      for (const key in newProps) {
+        if (Object.hasOwnProperty.call(newProps, key)) {
+          const newValue = newProps[key]; //新节点props的一个属性值
+          const oldValue = oldProps[key]  //旧节点对应的属性值
+          if (newValue!==oldValue) {
+            el.setAttribute(key,newValue)
+          }
+        }
+      }
+      //遍历旧的props,查看新的节点是否删除了一些props
+      for (const key in oldProps) {
+        //这里只需要比较旧props里的key是否在新props里面存在，不存在就删除掉对应的属性即可
+        if (!(key in newProps)) {
+          el.removeAttribute(key)
+        }
+      }
+      // 在真实的vue3里面编译的时候会判断props是否是静态的，如果是静态的这部分比较的代码就不需要执行
+
+      // 比较children
+      const oldChildren=n1.children
+      const newChildren=n2.children
+      // 先判断children是否是字符串
+      if (typeof(newChildren)==='string') {
+        if (typeof(oldChildren)==='string') {
+          // 新旧节点都是字符串，只需要改变文本内容即可
+          if (newChildren!==oldChildren) {
+            el.textContent=newChildren
+          }
+        }else{
+          // 就props是数组 只需要替换成文本就可以
+          el.textContent = newChildren
+        }
+      }else{
+        // 新children是数组
+        if (typeof(oldChildren)==='string') {
+          //旧节点是string 则需要把旧节点的内容清空，然后再遍历新children调用mount函数进行渲染
+          el.innerHtml=''
+          newChildren.forEach(child=>{
+            mount(child,el)
+          })
+        }else{
+          // 旧的节点也是数组
+          /* 
+            1、先取出两个数组的公共长度
+            2、调用Path方法比较公共长度部分的内容
+            3、如果新数组比就数组长，则新数组截取掉旧数组长度的部分剩余的遍历mount
+            4、如果新数组比旧数组短，则旧数组截取掉先数组长度部分之后遍历删除节点
+          */
+         // 先处理公共长度部分
+         const commonLength = Math.min(newChildren.length,oldChildren.length)
+         for (let index = 0; index < commonLength; index++) {
+           patch(oldChildren[index],newChildren[index])
+         }
+         if (newChildren.length>oldChildren.length) {
+           newChildren.slice(oldChildren.length).forEach(child=>{
+             mount(child,el)
+           })
+         }else if(newChildren.length<oldChildren.length){
+           oldChildren.slice(newChildren.length).forEach(child=>{
+             el.removeChild(child.el)
+           })
+         }
+        }
+      }
+    }else{
+      // 不是相同标签的元素   需要全部替换
+    }
+  }
+
+  const vdom2=h('div',{class:'green'},[
+    h('div',null,'updated'),
+    h('div',{class:'red'},[
+      'ddd',
+      h('div',null,'ccc')
+    ])
+  ])
+
+  // patch(vdom,vdom2)
+  setTimeout(()=>{
+      patch(vdom,vdom2)
+  },2000)
+</script>
