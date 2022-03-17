@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+
+</body>
+
+</html>
+<script>
+/*   // 定义全局变量 在调用watchEffect的时候存储当前正在执行的effect
+  let activeEffect
+  class Dep {
+    // 订阅者列表的集合
+    subscribe = new Set()
+    depend() {
+      if (activeEffect) {
+        this.subscribe.add(activeEffect)
+      }
+    }
+    notify() {
+      // 遍历所有订阅者  一次执行
+      this.subscribe.forEach(effect=>{
+        effect()
+      })
+    }
+  }
+  function watchEffect(effect) {
+    activeEffect=effect
+    effect()
+    activeEffect=null
+  }
+  const dep = new Dep()
+  watchEffect(() => {
+    dep.depend()
+    console.log('effect run');
+  })
+  dep.notify() */
+
+
+  // 改造成在new Dep() 的时候通过传参来实现自动追踪和通知
+  let activeEffect
+  class Dep{
+    constructor(key){
+      this.subscribes = new Set()
+      this._value = key
+    }
+    get key(){
+      this.depend()
+      return this._value
+    }
+    set key(newValue){
+      this._value=newValue
+      this.notify()
+    }
+    depend(){
+      if (activeEffect) {
+        this.subscribes.add(activeEffect)
+      }
+    }
+    notify(){
+      this.subscribes.forEach(effect=>{
+        effect()
+      })
+    }
+  }
+  function watchEffect(effect){
+    activeEffect=effect
+    effect()
+    activeEffect=null
+  }
+  const dep = new Dep('key')
+  watchEffect(()=>{
+    console.log(dep.key);
+  })
+  dep.key='changed'
+  dep.key=123
+</script>

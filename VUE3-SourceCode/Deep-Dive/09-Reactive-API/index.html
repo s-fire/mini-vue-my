@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+
+</body>
+
+</html>
+<script>
+  let activeEffect
+  class Dep {
+    subscribes = new Set()
+    depend() {
+      if (activeEffect) {
+        this.subscribes.add(activeEffect)
+      }
+    }
+    notify() {
+      this.subscribes.forEach(effect => {
+        effect()
+      })
+    }
+  }
+
+  // function reactive(raw) {
+  //   /*       // 使用vue2的Object.defindProperty实现
+  //       Object.keys(raw).forEach(key=>{
+  //         // 为每个属性实例化一个dep
+  //         const dep = new Dep()
+  //         let value = raw[key]
+  //         Object.defineProperty(raw,key,{
+  //           get(){
+  //             dep.depend()
+  //             return value
+  //           },
+  //           set(newValue){
+  //             value=newValue
+  //             dep.notify()
+  //           }
+  //         })
+  //       })
+  //       return raw */
+
+  //   // vue3的方式
+  //   //定义一个全局的WeakMap 绑定不同的对象和对象每个key对应的Dep实例
+  //   // const targetMap = new WeakMap()
+  //   // return new Proxy(raw, {
+  //   //   get(target, key) {
+  //   //     let depsMap = targetMap.get(target)
+  //   //     if (!depsMap) {
+  //   //       targetMap.set(target, (depsMap = new Map()))
+  //   //     }
+  //   //     let dep = depsMap.get(key)
+  //   //     if (!dep) {
+  //   //       depsMap.set(key, (dep = new Dep))
+  //   //     }
+  //   //     dep.depend()
+  //   //     return target[key]
+  //   //   },
+  //   //   set(target, key, newValue) {
+  //   //     let depsMap = targetMap.get(target)
+  //   //     if (!depsMap) {
+  //   //       targetMap.set(target, (depsMap = new Map()))
+  //   //     }
+  //   //     let dep = depsMap.get(key)
+  //   //     if (!dep) {
+  //   //       depsMap.set(key, (dep = new Dep))
+  //   //     }
+  //   //     target[key] = newValue
+  //   //     dep.notify()
+  //   //   }
+  //   // })
+
+  // }
+
+  // 代码优化之后
+  // 这里可以把获取dep的通用代码和proxy里的handle对象提取出来
+  const targetMap = new WeakMap()
+  function getDep(target, key) {
+    let depsMap = targetMap.get(target)
+    if (!depsMap) {
+      targetMap.set(target, (depsMap = new Map()))
+    }
+    let dep = depsMap.get(key)
+    if (!dep) {
+      depsMap.set(key, (dep = new Dep))
+    }
+    return dep
+  }
+  const reactiveHandle = {
+    get(target, key,receiver) {
+      const dep = getDep(target, key)
+      dep.depend()
+      // return target[key]
+      // 保证当有原型继承情况下的不会出现异常情况(保证proxy和raw的this指向一致?)
+      return Reflect.get(target,key,receiver)
+    },
+    set(target, key, newValue,receiver) {
+      const dep = getDep(target, key)
+      // target[key] = newValue
+      const result= Reflect.set(target,key,newValue,receiver)
+      dep.notify()
+      return result
+    }
+  }
+  function reactive(raw) {
+    // 则这里只需要
+    return new Proxy(raw, reactiveHandle)
+  }
+  function watchEffect(effect) {
+    activeEffect = effect
+    effect()
+    activeEffect = null
+  }
+
+  const state = reactive({
+    count: 0
+  })
+  watchEffect(() => {
+    console.log(state.count);
+  })
+  state.count++
+</script>
