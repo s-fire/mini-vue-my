@@ -1,4 +1,5 @@
 import { isObject } from "@vue/shared"
+import { track } from "./effect"
 
 const mutableHandles: ProxyHandler<object> = {
   get(target, key, receiver) {
@@ -10,6 +11,7 @@ const mutableHandles: ProxyHandler<object> = {
       */
       return true
     }
+    track(target,key)
     const res = Reflect.get(target, key, receiver)
     return res
   },

@@ -8,13 +8,16 @@
 </head>
 <script src="../dist/reactivity.global.js"></script>
 <body>
-  
+  <div id="app"></div>
 </body>
 </html>
 <script>
-  const {reactive} = VueReactivity
-  const obj = {name:'abc'}
+  const {reactive,effect} = VueReactivity
+  const obj = {name:'abc',age:13}
   const state1 = reactive(obj)
-  const state2 = reactive(state1)
-  console.log('state: ', state1 === state2);
+  // const state2 = reactive(state1)
+    // console.log('state: ', state1 === state2);
+  effect(()=>{
+    app.innerHtml = state1.name + '今年' + state1.age +'岁了'
+  })
 </script>
