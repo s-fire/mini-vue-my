@@ -1,5 +1,5 @@
 import { isObject } from "@vue/shared"
-import { track } from "./effect"
+import { track, trigger } from "./effect"
 
 const mutableHandles: ProxyHandler<object> = {
   get(target, key, receiver) {
@@ -16,8 +16,12 @@ const mutableHandles: ProxyHandler<object> = {
     return res
   },
   set(target, key, value, receiver) {
+    let oldValue = (target as any)[key]
     // Reflect.set会返回是否设置成功
     const res = Reflect.set(target, key, value, receiver)
+    if (oldValue!==value) {
+      trigger(target,key) 
+    }
     return res
   }
 }
