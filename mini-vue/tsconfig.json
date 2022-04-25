@@ -9,8 +9,9 @@
     "sourceMap": true,
     "outDir": "dist",                                   
     "esModuleInterop": true, // 允许通过es6的语法引入commonJs模块
-    "strict": true,
+    "strict": false,
     "baseUrl": ".", //以当前路劲为基准查找
+    "noEmitOnError": false,
     "paths": {
       "@vue/*":["packages/*/src"]
     }

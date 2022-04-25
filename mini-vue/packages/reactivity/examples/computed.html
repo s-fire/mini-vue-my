@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<script src="../dist/reactivity.global.js"></script>
+<body>
+  <div id="app"></div>
+</body>
+</html>
+<script>
+  const {reactive,effect,computed} = VueReactivity
+  const obj = {name:'abc',age:13}
+  const state1 = reactive(obj)
+  const myAge = computed(()=>{
+    return state1.age+18
+  })
+  
+  const myAge1 = computed({ //类中的属性访问器
+    get(){
+      console.log('runner');
+      return state1.age+18
+    },
+    set(value){
+      console.log('value: ', value);
+    }
+  })
+  effect(()=>{
+    console.log(myAge1.value);
+    console.log(myAge1.value);
+    console.log(myAge1.value);
+    console.log(myAge1.value);
+  })
+  setTimeout(() => {
+    state1.age=20
+  }, 2000);
+</script>

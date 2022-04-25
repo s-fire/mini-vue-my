@@ -8,11 +8,11 @@ function cleanupEffect(effect:ReactiveEffect) {
     dep.delete(effect)
   }
 }
-class ReactiveEffect {
-  constructor(public fn: () => void) { }
+export class ReactiveEffect {
   active = true
   deps:Array<any> = [] // 记录当前effect依赖了哪些属性,同时也可以记录当前属性依赖了哪些effect
-  run(): void {
+  constructor(public fn: () => void,public scheduler?) { }
+  run() {
     if (!this.active) {
       return this.fn()
     }
@@ -20,7 +20,7 @@ class ReactiveEffect {
       //解决同一个effect会多次执行,例如在effect把响应式对象的值设置为随机数，如果不做这个判断会无线循环调用effect
       try {
         effectStack.push(activeEffect = this as any) // 将当前effect推入栈中
-        this.fn()
+        return this.fn()
       } finally {
         effectStack.pop()
         /* 
@@ -31,7 +31,7 @@ class ReactiveEffect {
       }
     }
   }
-  stop():void{
+  stop(){
      if (this.active) {
         cleanupEffect(this)
         this.active=false       
@@ -58,14 +58,16 @@ export function track(target: object, key: string | symbol) {
     dep = new Set()
     depsMap.set(key,dep)
   }
-  // 判断dep里是否已经存在当前的effect
-  let shouldTrack = !dep.has(activeEffect)
-  if (shouldTrack) {
-    dep.add(activeEffect)
-    // 记录当前effeft依赖了哪些属性,这是保存在effect实例上的属性，在实现stop功能的时候需要访问这个deps
-    activeEffect?.deps.push(dep) 
-  }
-
+  trackEffect(dep)
+}
+export function trackEffect(dep) {
+    // 判断dep里是否已经存在当前的effect
+    let shouldTrack = !dep.has(activeEffect)
+    if (shouldTrack) {
+      dep.add(activeEffect)
+      // 记录当前effeft依赖了哪些属性,这是保存在effect实例上的属性，在实现stop功能的时候需要访问这个deps
+      activeEffect?.deps.push(dep) 
+    }
 }
 
 export function trigger(target: object, key: string | symbol) {
@@ -86,7 +88,14 @@ export function trigger(target: object, key: string | symbol) {
   //   effect.run()
   // }
   const deps = depsMap.get(key)
-  deps.forEach((effect: { run: () => void }) => {
+  triggerEffect(deps)
+}
+export function triggerEffect(deps) {
+  deps.forEach((effect: any) => {
+    // 如果传了调度函数 就执行传入的调度函数
+    if (effect.scheduler) {
+      return effect.scheduler()
+    }
     effect.run()
   });
 }
