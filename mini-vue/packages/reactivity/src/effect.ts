@@ -1,10 +1,17 @@
 // 解决effect里面嵌套effect时，effect引用错误的问题
 let effectStack: Array<any> = []
 let activeEffect: ReactiveEffect | undefined
+function cleanupEffect(effect:ReactiveEffect) {
+  // 把当前的effect从其依赖的所有属性的dep里面删掉
+  const {deps} = effect
+  for (const dep of deps) {
+    dep.delete(effect)
+  }
+}
 class ReactiveEffect {
   constructor(public fn: () => void) { }
   active = true
-  deps = [] // 记录当前effect依赖了哪些属性
+  deps:Array<any> = [] // 记录当前effect依赖了哪些属性,同时也可以记录当前属性依赖了哪些effect
   run(): void {
     if (!this.active) {
       return this.fn()
@@ -24,6 +31,12 @@ class ReactiveEffect {
       }
     }
   }
+  stop():void{
+     if (this.active) {
+        cleanupEffect(this)
+        this.active=false       
+     }
+  }
 }
 // 判断当前effect是否需要收集
 export function isTracking() {
@@ -42,13 +55,15 @@ export function track(target: object, key: string | symbol) {
   }
   let dep = depsMap.get(key)
   if (!dep) {
-    depsMap.set(key,(dep = new Set()))
+    dep = new Set()
+    depsMap.set(key,dep)
   }
   // 判断dep里是否已经存在当前的effect
   let shouldTrack = !dep.has(activeEffect)
   if (shouldTrack) {
     dep.add(activeEffect)
-    activeEffect!.deps.push(dep as never) // 记录当前effeft依赖了哪些属性
+    // 记录当前effeft依赖了哪些属性,这是保存在effect实例上的属性，在实现stop功能的时候需要访问这个deps
+    activeEffect?.deps.push(dep) 
   }
 
 }
@@ -78,4 +93,7 @@ export function trigger(target: object, key: string | symbol) {
 export function effect(fn: () => void) {
   const _effect = new ReactiveEffect(fn)
   _effect.run()
+  let runner:any = _effect.run.bind(_effect) //返回当前effect的run  使用的时候可以接受这个返回值再次调用触发
+  runner.effect = _effect  // 给runner添加一个effect属性，用来调用stop方法
+  return runner
 }

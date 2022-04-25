@@ -17,10 +17,11 @@
   const state1 = reactive(obj)
   // const state2 = reactive(state1)
     // console.log('state: ', state1 === state2);
-  effect(()=>{
+  const runner = effect(()=>{
     console.log('执行');
     document.getElementById('app').innerHTML=state1.name + '今年' + state1.age +'岁了'
   })
+  runner.effect.stop()
   setTimeout(() => {
     state1.age=20
   }, 2000);
