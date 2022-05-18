@@ -29,56 +29,55 @@
     }
   }
 
-  // function reactive(raw) {
-  //   /*       // 使用vue2的Object.defindProperty实现
-  //       Object.keys(raw).forEach(key=>{
-  //         // 为每个属性实例化一个dep
-  //         const dep = new Dep()
-  //         let value = raw[key]
-  //         Object.defineProperty(raw,key,{
-  //           get(){
-  //             dep.depend()
-  //             return value
-  //           },
-  //           set(newValue){
-  //             value=newValue
-  //             dep.notify()
-  //           }
-  //         })
-  //       })
-  //       return raw */
+  function reactive(raw) {
+    /*       // 使用vue2的Object.defindProperty实现
+        Object.keys(raw).forEach(key=>{
+          // 为每个属性实例化一个dep
+          const dep = new Dep()
+          let value = raw[key]
+          Object.defineProperty(raw,key,{
+            get(){
+              dep.depend()
+              return value
+            },
+            set(newValue){
+              value=newValue
+              dep.notify()
+            }
+          })
+        })
+        return raw */
 
-  //   // vue3的方式
-  //   //定义一个全局的WeakMap 绑定不同的对象和对象每个key对应的Dep实例
-  //   // const targetMap = new WeakMap()
-  //   // return new Proxy(raw, {
-  //   //   get(target, key) {
-  //   //     let depsMap = targetMap.get(target)
-  //   //     if (!depsMap) {
-  //   //       targetMap.set(target, (depsMap = new Map()))
-  //   //     }
-  //   //     let dep = depsMap.get(key)
-  //   //     if (!dep) {
-  //   //       depsMap.set(key, (dep = new Dep))
-  //   //     }
-  //   //     dep.depend()
-  //   //     return target[key]
-  //   //   },
-  //   //   set(target, key, newValue) {
-  //   //     let depsMap = targetMap.get(target)
-  //   //     if (!depsMap) {
-  //   //       targetMap.set(target, (depsMap = new Map()))
-  //   //     }
-  //   //     let dep = depsMap.get(key)
-  //   //     if (!dep) {
-  //   //       depsMap.set(key, (dep = new Dep))
-  //   //     }
-  //   //     target[key] = newValue
-  //   //     dep.notify()
-  //   //   }
-  //   // })
-
-  // }
+    // vue3的方式
+    // 定义一个全局的WeakMap 绑定不同的对象和对象每个key对应的Dep实例
+    const targetMap = new WeakMap()
+    return new Proxy(raw, {
+      get(target, key) {
+        let depsMap = targetMap.get(target)
+        if (!depsMap) {
+          targetMap.set(target, (depsMap = new Map()))
+        }
+        let dep = depsMap.get(key)
+        if (!dep) {
+          depsMap.set(key, (dep = new Dep))
+        }
+        dep.depend()
+        return target[key]
+      },
+      set(target, key, newValue) {
+        let depsMap = targetMap.get(target)
+        if (!depsMap) {
+          targetMap.set(target, (depsMap = new Map()))
+        }
+        let dep = depsMap.get(key)
+        if (!dep) {
+          depsMap.set(key, (dep = new Dep))
+        }
+        target[key] = newValue
+        dep.notify()
+      }
+    })
+  }
 
   // 代码优化之后
   // 这里可以把获取dep的通用代码和proxy里的handle对象提取出来
