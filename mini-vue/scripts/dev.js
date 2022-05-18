@@ -2,7 +2,7 @@ const minimist = require("minimist")
 const execa = require('execa')
 // 获取所输入的命令
 const args = minimist(process.argv.slice(2))
-const target = args.length ? args._[0] : 'reactivity'
+const target = args.length ? args._[0] : 'runtime-dom'
 console.log('target: ', target);
 const format = args.f || 'global'
 const sourcemap = args.s || false

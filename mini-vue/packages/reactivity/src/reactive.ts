@@ -65,3 +65,8 @@ function createReactiveObject(target: object) {
 export function reactive(target: object) {
   return createReactiveObject(target)
 }
+
+export function toReactive(value) {
+  return isObject(value) ? reactive(value) : value
+  
+}
