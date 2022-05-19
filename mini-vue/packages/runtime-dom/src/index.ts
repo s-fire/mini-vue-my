@@ -5,4 +5,7 @@
   渲染页面的时候需要的节点操作的一系列方法
 */
 import { nodeOps } from "./nodeOps";
+import { patchProp } from "./patchProp";
+
+const renderOptions = Object.assign(nodeOps,{patchProp})
 export * from "@vue/runtime-core"
