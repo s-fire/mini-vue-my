@@ -6,6 +6,20 @@
 */
 import { nodeOps } from "./nodeOps";
 import { patchProp } from "./patchProp";
-
+import { createRender } from "@vue/runtime-core";
 const renderOptions = Object.assign(nodeOps,{patchProp})
-export * from "@vue/runtime-core"
+console.log('renderOptions: ', renderOptions);
+
+// 将renderOptions传入到core中
+
+export const createApp = (component,rootProps=null)=>{
+  const {createApp} = createRender(renderOptions)
+  let app = createApp(component,rootProps)
+  let {mount} = app // 获取core中的mount方法
+  app.mount=function(container){ //重写mount
+    container = nodeOps.querySelector(container)
+    container.innerHtml = ''
+    mount(container)
+  } 
+}
+export * from "@vue/runtime-core" 
