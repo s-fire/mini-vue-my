@@ -7,7 +7,14 @@
   <title>Document</title>
 </head>
 <body>
-  
+  <div id="app"></div>
 </body>
 </html>
 <script src="../dist/runtime-dom.global.js"></script>
+<script>
+  let {createApp,h } =VueRuntimeDom
+  let App = {
+
+  }
+  createApp(App).mount('#app')
+</script>

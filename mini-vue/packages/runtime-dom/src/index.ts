@@ -21,5 +21,6 @@ export const createApp = (component,rootProps=null)=>{
     container.innerHtml = ''
     mount(container)
   } 
+  return app
 }
 export * from "@vue/runtime-core" 
