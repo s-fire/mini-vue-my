@@ -14,7 +14,12 @@
 <script>
   let {createApp,h } =VueRuntimeDom
   let App = {
-
+    props:{
+      title:{}
+    },
+    setup(props,ctx) {
+      console.log('setUp');
+    }
   }
-  createApp(App).mount('#app')
+  createApp(App,{title:'aa'}).mount('#app')
 </script>
