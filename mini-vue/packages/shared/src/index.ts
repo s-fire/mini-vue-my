@@ -20,3 +20,5 @@ export const enum ShapeFlags {
   COMPONENT = ShapeFlags.STATEFUL_COMPONENT | ShapeFlags.FUNCTION_COMPONENT // 组件
 
 }
+const hasOwnPropetry = Object.prototype.hasOwnProperty
+export const hasOwn = (value,key)=> hasOwnPropetry.call(value,key)

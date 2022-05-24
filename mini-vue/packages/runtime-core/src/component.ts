@@ -1,5 +1,5 @@
 import { reactive } from "@vue/reactivity"
-import { isFunction, isObject } from "@vue/shared"
+import { hasOwn, isFunction, isObject } from "@vue/shared"
 
 export function createComponentInstance(vnode) {
   const type = vnode.type
@@ -19,7 +19,7 @@ export function createComponentInstance(vnode) {
     exposed:{}, // 暴露的方法
     isMounted:false // 是否挂载
   }
-  instance.ctx ={_:instance}
+  instance.ctx ={_:instance} // 用于设置instance.proxy时代理对象取值
   return instance
 }
 export function initProps(instance,rawProps) {
@@ -50,10 +50,37 @@ function createSetupComponent(instance) {
     expose:(exposed)=> instance.exposed = exposed || {}
   }
 }
+const PublicInstaceProxyHandles = {
+  get({_:instance},key){
+    const {setupState,props} = instance
+    if (hasOwn(setupState,key)) {
+      // 在组件的状态里有这个属性
+      return setupState[key]
+    }else if (hasOwn(props,key)) {
+      return props[key]
+    }else{
+      // ...
+    }
+  },
+  set({_:instance},key,value){
+    const {setupState,props} = instance
+    if (hasOwn(setupState,key)) {
+      // 在组件的状态里有这个属性
+      setupState[key] = value
+    }else if (hasOwn(props,key)) {
+      console.warn('props is readonly');
+    }else{
+      // ...
+    }
+    return true
+  }
+}
 export function setupStateFulCompon(instance) {
   // 调用组件的setup方法
   const Component = instance.type
   const {setup} = Component
+  // 给实例的proxy赋值 是一个代理对象
+  instance.proxy = new Proxy(instance.ctx,PublicInstaceProxyHandles)
   if (setup) {
     const setupContext = createSetupComponent(instance)
     // 获取setup的返回值
@@ -68,8 +95,7 @@ export function setupStateFulCompon(instance) {
     // 没有render 是手写render 需要做模板编译
     instance.render = Component.render
   }
-  console.log('instance: ', instance);
-
+  console.log('instance: ', instance.proxy.title,instance.proxy.count);
 }
 export function setupComponent(instance) {
   const {props,children} = instance.vnode
