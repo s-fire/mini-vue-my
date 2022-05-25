@@ -8,7 +8,6 @@ import { nodeOps } from "./nodeOps";
 import { patchProp } from "./patchProp";
 import { createRender } from "@vue/runtime-core";
 const renderOptions = Object.assign(nodeOps,{patchProp})
-console.log('renderOptions: ', renderOptions);
 
 // 将renderOptions传入到core中
 

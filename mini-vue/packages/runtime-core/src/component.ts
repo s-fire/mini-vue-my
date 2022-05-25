@@ -95,7 +95,6 @@ export function setupStateFulCompon(instance) {
     // 没有render 是手写render 需要做模板编译
     instance.render = Component.render
   }
-  console.log('instance: ', instance.proxy.title,instance.proxy.count);
 }
 export function setupComponent(instance) {
   const {props,children} = instance.vnode

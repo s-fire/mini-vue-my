@@ -10,7 +10,8 @@ export function createVNode(type, props, children = null) {
     type,
     props,
     shapeFlag,
-    children, key: props && props.key,
+    children, 
+    key: props && props.key,
     component: null, //如果是组件的虚拟节点要保存组件的实例
     el: null // 虚拟节点对应的真实节点
   }
@@ -20,4 +21,7 @@ export function createVNode(type, props, children = null) {
     vnode.shapeFlag |= isString(children) ? ShapeFlags.TEXT_CHILDREN : ShapeFlags.ARRAY_CHILDREN
   }
   return vnode
+}
+export function isVNode(vnode) {
+  return !!vnode.__v_isVNode
 }

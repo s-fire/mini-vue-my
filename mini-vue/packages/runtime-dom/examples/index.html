@@ -19,10 +19,15 @@
     },
     setup(props,ctx) {
       return {
-        count:1
+        count:1,
+        click:()=>{
+          console.log('click');
+        }
       }
-      console.log('setUp');
-    }
+    },
+    render(proxy) {
+      return h('h1',{onClick:this.click,title:proxy.title},'hello'+this.count)
+    },
   }
   createApp(App,{title:'aa'}).mount('#app')
 </script>

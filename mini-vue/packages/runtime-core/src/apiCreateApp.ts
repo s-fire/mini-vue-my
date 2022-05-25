@@ -8,7 +8,6 @@ export function createAppApi(render) {
       mount(container) {
         // 1.创造组件虚拟节点
         let vnode = createVNode(rootComponent, rootProps)
-        console.log('vnode: ', vnode);
         // 2.将虚拟节点渲染到容器中
         render(vnode,container)
         if (!isMounted) {
