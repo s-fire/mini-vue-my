@@ -22,6 +22,7 @@ export function createRender(renderOptions) {
         // 组件初始化流程
         // render方法会返回虚拟节点 渲染页面的时候会进行取值操作，进行依赖收集，收集对应的effect
         const subTree =  instance.subTree = instance.render.call(proxy,proxy)
+        console.log('subTree: ', subTree);
         instance.isMounted=true
       }else{
         // 组件更新的流程

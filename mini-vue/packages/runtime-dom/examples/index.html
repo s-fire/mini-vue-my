@@ -12,21 +12,27 @@
 </html>
 <script src="../dist/runtime-dom.global.js"></script>
 <script>
-  let {createApp,h } =VueRuntimeDom
+  let {createApp,h,ref } =VueRuntimeDom
+  function useConter() {
+    const count = ref(0)
+    const add = ()=>{
+      count.value++
+    }
+    return {count,add}
+  }
   let App = {
     props:{
       title:{}
     },
     setup(props,ctx) {
+      let {count,add} = useConter()
       return {
-        count:1,
-        click:()=>{
-          console.log('click');
-        }
+        count,
+        add
       }
     },
     render(proxy) {
-      return h('h1',{onClick:this.click,title:proxy.title},'hello'+this.count)
+      return h('h1',{onClick:this.add,title:proxy.title},'hello'+this.count.value)
     },
   }
   createApp(App,{title:'aa'}).mount('#app')

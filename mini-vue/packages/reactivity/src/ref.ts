@@ -31,5 +31,5 @@ function createRef(rawValue) {
   return new RefImpl(rawValue)
 }
 export function ref(raw) {
-  
+  return createRef(raw)
 }
