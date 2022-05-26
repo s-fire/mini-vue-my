@@ -25,3 +25,11 @@ export function createVNode(type, props, children = null) {
 export function isVNode(vnode) {
   return !!vnode.__v_isVNode
 }
+export const Text = Symbol()
+// 把传过来的字符串转换为vnode
+export function normalizeVNode(vnode) {
+  if (isObject(vnode)) {
+    return vnode
+  }
+  return createVNode(Text,null,String(vnode))
+}

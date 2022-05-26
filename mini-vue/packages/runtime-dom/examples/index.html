@@ -32,7 +32,7 @@
       }
     },
     render(proxy) {
-      return h('h1',{onClick:this.add,title:proxy.title},'hello'+this.count.value)
+      return h('h1',{onClick:this.add,title:proxy.title},h('span',['world',h('a','xxx')]),this.count.value)
     },
   }
   createApp(App,{title:'aa'}).mount('#app')

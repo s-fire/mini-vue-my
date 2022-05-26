@@ -23,8 +23,9 @@ export function h(type,propsOrchildren,children) {
         // 第二个参数是一个虚拟节点
         return createVNode(type,null,[propsOrchildren])
       }
+      debugger
       // 第二个参数是对象
-      return createVNode(type,propsOrchildren)
+      return createVNode(type,null,propsOrchildren)
     }else{
       // 第二个参数是字符串或者数组
       return createVNode(type,null,propsOrchildren)
