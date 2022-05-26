@@ -33,3 +33,7 @@ export function normalizeVNode(vnode) {
   }
   return createVNode(Text,null,String(vnode))
 }
+export function isSameVNodeType(n1,n2) {
+  // 判断两个节点是否是同一个  在tag一致时通过key值来区分
+  return n1.type === n2.type && n1.key === n2.key
+}
