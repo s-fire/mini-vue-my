@@ -54,7 +54,7 @@ function patchEvent(el,key:string,nextValue:HTMLElementEventMap) {
     }
   }
 }
-export const patchProp = (el:HTMLElement,key,prevValue,nextValue) =>{
+export const patchProps = (el:HTMLElement,key,prevValue,nextValue) =>{
   if (key==='class') { // 类名
     patchClass(el,nextValue)
   }else if (key === 'style') {

@@ -17,6 +17,7 @@
     const count = ref(0)
     const add = ()=>{
       count.value++
+      alert(1)
     }
     return {count,add}
   }
@@ -32,7 +33,7 @@
       }
     },
     render(proxy) {
-      return h('h1',{onClick:this.add,title:proxy.title},h('span',['world',h('a','xxx')]),this.count.value)
+      return h('h1',{onClick:this.add,title:proxy.title,style:{color:'red'}},h('span',['world',h('a','xxx')]),this.count.value)
     },
   }
   createApp(App,{title:'aa'}).mount('#app')

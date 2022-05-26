@@ -92,6 +92,15 @@ export function createRender(renderOptions) {
       // children是数组
       mountChildren(children,el)
     }
+    // 处理属性
+    if (props) {
+      for (const key in props) {
+        if (Object.prototype.hasOwnProperty.call(props, key)) {
+          const element = props[key];
+          hostPathProps(el,key,null,element)
+        }
+      }
+    }
     
     // 插入容器
     hostInsert(el,container)
