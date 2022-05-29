@@ -17,14 +17,14 @@ export function h(type,propsOrchildren,children) {
  // 根据参数长度来实现不同的逻辑
   let l = arguments.length
   if (l === 2) {
-    if (isObject(propsOrchildren) && Array.isArray(propsOrchildren)) {
+    if (isObject(propsOrchildren) && !Array.isArray(propsOrchildren)) {
       // 只有两个参数 且第二个参数是一个对象
       if (isVNode(propsOrchildren)) {
         // 第二个参数是一个虚拟节点
         return createVNode(type,null,[propsOrchildren])
       }
       // 第二个参数是对象
-      return createVNode(type,null,propsOrchildren)
+      return createVNode(type,propsOrchildren)
     }else{
       // 第二个参数是字符串或者数组
       return createVNode(type,null,propsOrchildren)
