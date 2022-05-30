@@ -34,7 +34,6 @@ export function createRender(renderOptions) {
         // 组件初始化流程
         // render方法会返回虚拟节点 渲染页面的时候会进行取值操作，进行依赖收集，收集对应的effect
         const subTree =  instance.subTree = instance.render.call(proxy,proxy)
-        console.log('subTree: ', subTree);
         // 真正渲染组件 应该渲染的是subTree
         patch(null,subTree,container)
         // 渲染完成后会生成真实节点挂到subTree上
@@ -44,7 +43,6 @@ export function createRender(renderOptions) {
         // 组件更新的流程
         const prevTree = instance.subTree
         const nextTree = instance.render.call(proxy,proxy)
-        console.log('nextTree: ', nextTree);
         patch(prevTree,nextTree,container)
       }
     }
@@ -81,7 +79,7 @@ export function createRender(renderOptions) {
     }
 
   }
-  const mountElement = (vnode,container)=>{
+  const mountElement = (vnode,container,anchor=null)=>{
     let {type,props,shapeFlag,children} = vnode // 获取节点的类型、属性、children
     // 创建节点
     let el=vnode.el= hostCreateElement(type)
@@ -104,7 +102,7 @@ export function createRender(renderOptions) {
     }
     
     // 插入容器
-    hostInsert(el,container)
+    hostInsert(el,container,anchor)
   }
   const patchProps=(oldProps,newProps,el)=>{
     if (oldProps === newProps) return
@@ -125,6 +123,57 @@ export function createRender(renderOptions) {
     // 循环删除children
     for (let index = 0; index < children.length; index++) {
       unmount(children[index])
+    }
+  }
+  const patchKeyedChildren=(c1,c2,container)=>{
+    let e1 = c1.length-1 // 老数组的长度
+    let e2 = c2.length-1 // 新数组的长度
+    let i =0
+    //1 sync from start 从头开始一个个比(前面的部分元素是一样的)
+    while (i <= e1 && i<=e2) {
+      // 找到其中较短的数组的最后一项
+      const n1 = c1[i]
+      const n2 = c2[i]
+      if (isSameVNodeType(n1,n2)) {
+        // 如果两个节点是相同节点 则调用Patch
+        patch(n1,n2,container)
+      }else{
+        break
+      }
+      i++
+    }
+    //2 sync from end 从尾部开始一个个比(后面的部分元素是一样的)
+    console.log(i);
+    
+    while (i <= e1 && i<=e2) {
+      // 找到其中较短的数组的最后一项
+      const n1 = c1[e1]
+      const n2 = c2[e2]
+      if (isSameVNodeType(n1,n2)) {
+        // 如果两个节点是相同节点 则调用Patch
+        patch(n1,n2,container)
+      }else{
+        break
+      }
+      // 此时是从尾部开始比较的 所以i不需要++ 而是c1和c2的长度最后一个元素的指针需要--
+      e1--
+      e2--
+    }
+    // console.log(e1,e2,i); // 0 1 0
+    
+    // 以上两步可以确定好头部和尾部相同的节点 从而可以找出除了头部和尾部之外的不同节点
+    if (i>e1) { // 如果i>e1 则说明有新增的元素
+      if (i<=e2) { // i和e2之间的内容就是新增的
+        // 处理新增元素时新增的位置
+        const nextPos = e2 +1 // 给新数组的最后一位指针 +1
+        // 如果下一个指针比新数组长度小 (这种情况是从后面往前比较的e2是上面通过--得来的) 则证明是需要在前面追加元素，取出下一个节点作为参照物
+        // 否则就是需要在最尾部追加 (这种情况是从前面后面比较的e2就是新数组最后元素的指针) 不需要传参照物(默认参照物是container)
+        const anchor = nextPos < c2.length ? c2[nextPos].el : null
+        while (i<=e2) {
+          patch(null,c2[i],container,anchor)
+          i++
+        }
+      } 
     }
   }
   const patchChldren =(n1,n2,el)=>{
@@ -158,6 +207,7 @@ export function createRender(renderOptions) {
       if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
         if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
           // 新老都是数组 对比两个数组的差异
+          patchKeyedChildren(c1,c2,el)
         }else{
           // 之前的数组  现在不是数组(空文本)
           unmountChildren(c1) // 4
@@ -184,10 +234,10 @@ export function createRender(renderOptions) {
     // 儿子比较
     patchChldren(n1,n2,el)
   }
-  const processElement=(n1,n2,container)=>{
+  const processElement=(n1,n2,container,anchor=null)=>{
     if (n1===null) {
       // 初始化
-      mountElement(n2,container)
+      mountElement(n2,container,anchor)
     }else{
       // 更新
       patchElement(n1,n2)
@@ -203,7 +253,7 @@ export function createRender(renderOptions) {
   const unmount = (vnode) =>{
     hostRemove(vnode.el)
   }
-  const patch=(n1,n2,container)=>{
+  const patch=(n1,n2,container,anchor = null)=>{
     if (n1 && !isSameVNodeType(n1,n2)) {
       unmount(n1)
       n1=null
@@ -223,7 +273,7 @@ export function createRender(renderOptions) {
           processComponent(n1,n2,container)
         }else if (shapeFlag && ShapeFlags.ELEMENT) {
           // 类型是元素
-          processElement(n1,n2,container)
+          processElement(n1,n2,container,anchor)
         }
     }
   }
