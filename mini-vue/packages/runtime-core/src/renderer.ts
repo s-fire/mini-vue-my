@@ -160,8 +160,8 @@ export function createRender(renderOptions) {
       e2--
     }
     // console.log(e1,e2,i); // 0 1 0
-    
     // 以上两步可以确定好头部和尾部相同的节点 从而可以找出除了头部和尾部之外的不同节点
+    // 3. common seqence + mount 正常序列挂载
     if (i>e1) { // 如果i>e1 则说明有新增的元素
       if (i<=e2) { // i和e2之间的内容就是新增的
         // 处理新增元素时新增的位置
@@ -175,6 +175,66 @@ export function createRender(renderOptions) {
         }
       } 
     }
+    // 3. common seqence + unmount 正常序列卸载
+    else if (i>e2) {
+      // 老的比新的多 删除i和e1之间的元素
+      while (i<=e1) {
+        unmount(c1[i])
+        i++
+      }
+
+    }
+    // unknow seqence 无规律
+    const s1 = i  //s1 -> e1 比较完前后之后中间不同的元素
+    const s2 = i  //s2 -> e2 比较完前后之后中间不同的元素
+    /* 
+      根据新的节点数组中不同的元素创建一个映射表
+      拿老的节点去表里找 有则复用  没有则添加
+    */
+   const keyToNewIndexMap = new Map()
+   for (let i = s2; i <= e2; i++) {
+     const child = c2[i]
+     keyToNewIndexMap.set(child.key,i)
+   }
+   /* 
+      创建一个数组 长度为新节点数组中不同部分的元素个数
+   */
+  // 算出数组长度
+  const toBePatched = e2 - s2 +1
+  const newIndexToOldMapIndex = new Array(toBePatched).fill(0)
+  for (let i = s1; i <= e1; i++) {
+    const preChild = c1[i]; // 拿到老的每一个节点
+    let newIndex = keyToNewIndexMap.get(preChild.key)
+    if (newIndex === undefined) {
+      // 老的元素在新的数组里没有 则删除
+      unmount(preChild)
+    }else{
+     /*  newIndex是该元素在整个新数组里的下标，需要减去前面相同部分的长度
+      才能得到 在 newIndexToOldMapIndex 里的真实位置 ，然后把这个位置的
+      对应的元素(本来是0)改成老数组中该元素的下标
+      */
+      newIndexToOldMapIndex[newIndex - s2] = i + 1 
+      // +1确保当i=0的时候覆盖数组内元素内容的时候不会还是为O 因为如果为O代表该位置的元素没有被覆盖，则说明这个元素是要新增的
+      // 比较两个节点
+      patch(preChild,c2[newIndex],container)
+    }
+  }
+  // 倒序插入元素
+  for(let i = toBePatched -1; i>=0; i--){
+    console.log(s2+i);
+    
+    let lastIndex = s2 + i  // newIndexToOldMapIndex 最后一个元素在c2里对应位置
+    let lastChild = c2[lastIndex]
+    // 判断lastIndex是否是c2的最后一个元素 不是的话取下一位元素做参照位置
+    let anchor = lastIndex + 1 < c2.length ? c2[lastIndex + 1].el : null
+    if (newIndexToOldMapIndex[i] === 0) {
+      // 当前位置的元素值没有被修改过，则证明该元素是新增的
+      patch(null,lastChild,container,anchor)
+    }else{
+      // 此时lastChild会逐步往前推
+      hostInsert(lastChild.el,container,anchor) // 依次倒序插入元素
+    }
+  }
   }
   const patchChldren =(n1,n2,el)=>{
     // 老的children
