@@ -3,6 +3,7 @@ class ReactiveEffect {
   // 收集当前effect被哪些dep所收集
   deps=[]
   active= true // 避免多次调用stop时 重复清理effect
+  onStop?:()=>void
   constructor(fn, public scheduler?){
     this._fn = fn
   }
@@ -14,6 +15,9 @@ class ReactiveEffect {
     if (this.active) {
       cleanUpEffect(this)
       this.active = false
+      if (this.onStop) {
+        this.onStop()
+      }
     }
   }
 }
@@ -37,6 +41,7 @@ export function track(target,key) {
   }
   dep.add(activeEffect)
   // 将dep添加到当前effect的deps里,用于调用stop时删除当前的effect
+  if (!activeEffect) return
   activeEffect.deps.push(dep)  
 }
 export function trigger(target,key) {
@@ -59,6 +64,7 @@ let activeEffect
 export function effect(fn,options:any={}){
   const scheduler = options.scheduler
   const _effect = new ReactiveEffect(fn,scheduler)
+  Object.assign(_effect,options)
   _effect.run()
   const runner:any =  _effect.run.bind(_effect)
   // 给返回的runner挂载effect属性 用于在调用stop方法时调用到实例上的stop方法
