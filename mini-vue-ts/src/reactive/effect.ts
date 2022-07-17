@@ -36,10 +36,16 @@ function cleanUpEffect(effect) {
     dep.delete(effect);
   });
 }
-function isTracking() {
+export function isTracking() {
   return shouldTrack && activeEffect !== undefined;
 }
 const targetsMap = new Map();
+export function trackEffects(dep) {
+  // 将dep添加到当前effect的deps里,用于调用stop时删除当前的effect
+  if (dep.has(activeEffect)) return;
+  dep.add(activeEffect);
+  activeEffect.deps.push(dep);
+}
 export function track(target, key) {
   if (!isTracking()) return;
   let depsMap = targetsMap.get(target);
@@ -52,10 +58,16 @@ export function track(target, key) {
     dep = new Set();
     depsMap.set(key, dep);
   }
-  // 将dep添加到当前effect的deps里,用于调用stop时删除当前的effect
-  if (dep.has(activeEffect)) return;
-  dep.add(activeEffect);
-  activeEffect.deps.push(dep);
+  trackEffects(dep);
+}
+export function triggerEffects(dep) {
+  dep.forEach((effect) => {
+    if (effect.scheduler) {
+      effect.scheduler();
+    } else {
+      effect.run();
+    }
+  });
 }
 export function trigger(target, key) {
   let depsMap = targetsMap.get(target);
@@ -64,13 +76,7 @@ export function trigger(target, key) {
   }
   let dep = depsMap.get(key);
   if (dep) {
-    dep.forEach((effect) => {
-      if (effect.scheduler) {
-        effect.scheduler();
-      } else {
-        effect.run();
-      }
-    });
+    triggerEffects(dep);
   }
 }
 export function effect(fn, options: any = {}) {
