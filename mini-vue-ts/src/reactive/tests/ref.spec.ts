@@ -19,5 +19,21 @@ describe("ref", () => {
     a.value = 2;
     expect(calls).toBe(2);
     expect(dummy).toBe(2);
+    // same value should not trugger
+    a.value = 2;
+    expect(calls).toBe(2);
+    expect(dummy).toBe(2);
+  });
+  it("should make nested properties reactive", () => {
+    const origin = ref({
+      count: 1,
+    });
+    let dummy;
+    effect(() => {
+      dummy = origin.value.count;
+    });
+    expect(dummy).toBe(1);
+    origin.value.count = 2;
+    expect(dummy).toBe(2);
   });
 });
