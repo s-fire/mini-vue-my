@@ -1,5 +1,6 @@
 import { effect } from "../effect";
-import { ref } from "../ref";
+import { reactive } from "../reactive";
+import { isRef, proxyRef, ref, unRef } from "../ref";
 
 describe("ref", () => {
   it("happy path", () => {
@@ -35,5 +36,33 @@ describe("ref", () => {
     expect(dummy).toBe(1);
     origin.value.count = 2;
     expect(dummy).toBe(2);
+  });
+  it('isRef', () => {
+    const a = ref(1)
+    const obj = reactive({b:1})
+    expect(isRef(a)).toBe(true)
+    expect(isRef(1)).toBe(false)
+    expect(isRef(obj)).toBe(false)
+  });
+  it('unRef', () => {
+    const a = ref(1)
+    expect(unRef(a)).toBe(1)
+    expect(unRef(1)).toBe(1)
+  });
+  it('proxyRefs', () => {
+    const user = {
+      age:ref(10),
+      name:'xiaoming'
+    }
+    const proxyUser =proxyRef(user)
+    expect(user.age.value).toBe(10)
+    expect(proxyUser.age).toBe(10)
+    expect(proxyUser.name).toBe('xiaoming')
+    proxyUser.age = 20
+    expect(proxyUser.age).toBe(20)
+    expect(user.age.value).toBe(20)
+    proxyUser.age = ref(10)
+    expect(proxyUser.age).toBe(10)
+    expect(user.age.value).toBe(10)
   });
 });
