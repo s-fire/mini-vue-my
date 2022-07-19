@@ -1,6 +1,6 @@
 let activeEffect;
 let shouldTrack; //实收收集当前effect所存在的dep依赖，在实现stop的时候需要用到
-class ReactiveEffect {
+export class ReactiveEffect {
   private _fn: any;
   // 收集当前effect被哪些dep所收集
   deps = [];
