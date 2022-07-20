@@ -1,8 +1,8 @@
-export function createVnode(type,prop?,children?) {
+export function createVnode(type,props?,children?) {
   // type传入的App配置
   return {
     type,
-    prop,
+    props,
     children
   }
   

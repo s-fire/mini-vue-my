@@ -2,6 +2,10 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
+const isObject = (val) => {
+    return val !== null && typeof val === "object";
+};
+
 function createComponentInstance(vnode) {
     const component = {
         vnode,
@@ -54,35 +58,69 @@ function finishComponentSetup(instance) {
 }
 
 function render(vnode, container) {
-    patch(vnode);
+    patch(vnode, container);
 }
 function patch(vnode, container) {
-    // 处理组件
-    processComponent(vnode);
+    if (typeof vnode.type === "string") {
+        // 处理元素
+        processElement(vnode, container);
+    }
+    else if (isObject(vnode.type)) {
+        // 处理组件
+        processComponent(vnode, container);
+    }
+}
+function processElement(vnode, container) {
+    // 初始化元素
+    mountElement(vnode, container);
+}
+function mountElement(vnode, container) {
+    const el = document.createElement(vnode.type);
+    const { children } = vnode;
+    if (typeof children === "string") {
+        // 文本内容直接设置
+        el.textContent = children;
+    }
+    else if (Array.isArray(children)) {
+        // 数组类型 遍历后调用Patch
+        mountChildren(vnode, el);
+    }
+    // 处理props属性
+    const { props } = vnode;
+    for (const key in props) {
+        const element = props[key];
+        el.setAttribute(key, element);
+    }
+    container.append(el);
+}
+function mountChildren(vnode, el) {
+    vnode.children.forEach((element) => {
+        patch(element, el);
+    });
 }
 // 处理组件
 function processComponent(vnode, container) {
     // 挂载组件
-    mountComponent(vnode);
+    mountComponent(vnode, container);
 }
 // 挂载组件
 function mountComponent(vnode, container) {
     // 创建组件实例
     const instance = createComponentInstance(vnode);
     setupComponent(instance);
-    setupRederEffect(instance);
+    setupRederEffect(instance, container);
 }
 function setupRederEffect(instance, container) {
     const subTree = instance.render();
     // subTree h函数返回的内容
-    patch(subTree);
+    patch(subTree, container);
 }
 
-function createVnode(type, prop, children) {
+function createVnode(type, props, children) {
     // type传入的App配置
     return {
         type,
-        prop,
+        props,
         children
     };
 }
@@ -94,13 +132,13 @@ function createApp(rootComponent) {
             // 转换成虚拟节点
             // component -> vnode
             const vnode = createVnode(rootComponent);
-            render(vnode);
+            render(vnode, rootContainer);
         }
     };
 }
 
-function h(type, prop, children) {
-    return createVnode(type, prop, children);
+function h(type, props, children) {
+    return createVnode(type, props, children);
 }
 
 exports.createApp = createApp;
