@@ -18,7 +18,7 @@ function processElement(vnode: any, container: any) {
   mountElement(vnode, container);
 }
 function mountElement(vnode: any, container: any) {
-  const el:HTMLElement = document.createElement(vnode.type);
+  const el:HTMLElement = vnode.el= document.createElement(vnode.type);
   const { children } = vnode;
   if (typeof children === "string") {
     // 文本内容直接设置
@@ -47,15 +47,17 @@ function processComponent(vnode: any, container: any) {
   mountComponent(vnode, container);
 }
 // 挂载组件
-function mountComponent(vnode: any, container) {
+function mountComponent(initalVnode: any, container) {
   // 创建组件实例
-  const instance = createComponentInstance(vnode);
+  const instance = createComponentInstance(initalVnode);
   setupComponent(instance);
-  setupRederEffect(instance, container);
+  setupRederEffect(instance,initalVnode, container);
 }
 
-function setupRederEffect(instance: any, container) {
-  const subTree = instance.render();
+function setupRederEffect(instance: any,initalVnode, container) {
+  const {proxy} = instance
+  const subTree = instance.render.call(proxy);
   // subTree h函数返回的内容
   patch(subTree, container);
+  initalVnode.el = subTree.el // 把根节点的el保存到当前组件的虚拟节点上 用于this.$el访问
 }

@@ -3,7 +3,8 @@ export function createVnode(type,props?,children?) {
   return {
     type,
     props,
-    children
+    children,
+    el:null // 保存当前的el dom
   }
   
 }

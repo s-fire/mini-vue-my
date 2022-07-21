@@ -2,10 +2,27 @@ const isObject = (val) => {
     return val !== null && typeof val === "object";
 };
 
+const publicPropertiesMap = {
+    $el: (i) => i.vnode.el
+};
+const publicInstanceProxyHandlers = {
+    get({ _: instance }, key) {
+        const { setupState } = instance;
+        if (key in setupState) {
+            return setupState[key];
+        }
+        const publicGetter = publicPropertiesMap[key];
+        if (publicGetter) {
+            return publicGetter(instance);
+        }
+    }
+};
+
 function createComponentInstance(vnode) {
     const component = {
         vnode,
-        type: vnode.type
+        type: vnode.type,
+        setupState: {} // 保存setup的返回内容
     };
     return component;
 }
@@ -31,6 +48,8 @@ function setupStatefulComponent(instance) {
       }
     */
     const Component = instance.type; // 传入的App配置
+    // 创建组件代理对象  用于访问this.xxx
+    instance.proxy = new Proxy({ _: instance }, publicInstanceProxyHandlers);
     // 取到App里的setup函数
     const { setup } = Component;
     if (setup) {
@@ -71,7 +90,7 @@ function processElement(vnode, container) {
     mountElement(vnode, container);
 }
 function mountElement(vnode, container) {
-    const el = document.createElement(vnode.type);
+    const el = vnode.el = document.createElement(vnode.type);
     const { children } = vnode;
     if (typeof children === "string") {
         // 文本内容直接设置
@@ -100,16 +119,18 @@ function processComponent(vnode, container) {
     mountComponent(vnode, container);
 }
 // 挂载组件
-function mountComponent(vnode, container) {
+function mountComponent(initalVnode, container) {
     // 创建组件实例
-    const instance = createComponentInstance(vnode);
+    const instance = createComponentInstance(initalVnode);
     setupComponent(instance);
-    setupRederEffect(instance, container);
+    setupRederEffect(instance, initalVnode, container);
 }
-function setupRederEffect(instance, container) {
-    const subTree = instance.render();
+function setupRederEffect(instance, initalVnode, container) {
+    const { proxy } = instance;
+    const subTree = instance.render.call(proxy);
     // subTree h函数返回的内容
     patch(subTree, container);
+    initalVnode.el = subTree.el; // 把根节点的el保存到当前组件的虚拟节点上 用于this.$el访问
 }
 
 function createVnode(type, props, children) {
@@ -117,7 +138,8 @@ function createVnode(type, props, children) {
     return {
         type,
         props,
-        children
+        children,
+        el: null // 保存当前的el dom
     };
 }
 
