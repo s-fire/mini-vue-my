@@ -1,14 +1,17 @@
 import { isObject } from "../shared";
+import { ShapeFlags } from "../shared/ShapeFlags";
 import { createComponentInstance, setupComponent } from "./component";
 
 export function render(vnode, container) {
   patch(vnode, container);
 }
 function patch(vnode, container) {
-  if (typeof vnode.type === "string") {
+  const {shapeFlag} = vnode
+  // 这里是 & 运算  获取当前vnode的类型
+  if (shapeFlag & ShapeFlags.ELEMENT) {
     // 处理元素
     processElement(vnode, container);
-  } else if (isObject(vnode.type)) {
+  } else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
     // 处理组件
     processComponent(vnode, container);
   }
@@ -19,11 +22,11 @@ function processElement(vnode: any, container: any) {
 }
 function mountElement(vnode: any, container: any) {
   const el:HTMLElement = vnode.el= document.createElement(vnode.type);
-  const { children } = vnode;
-  if (typeof children === "string") {
+  const { children,shapeFlag } = vnode;
+  if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
     // 文本内容直接设置
     el.textContent = children;
-  } else if (Array.isArray(children)) {
+  } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
     // 数组类型 遍历后调用Patch
     mountChildren(vnode, el);
   }
