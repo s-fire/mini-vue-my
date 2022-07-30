@@ -6,7 +6,7 @@ export function render(vnode, container) {
   patch(vnode, container);
 }
 function patch(vnode, container) {
-  const {shapeFlag} = vnode
+  const { shapeFlag } = vnode;
   // 这里是 & 运算  获取当前vnode的类型
   if (shapeFlag & ShapeFlags.ELEMENT) {
     // 处理元素
@@ -21,8 +21,8 @@ function processElement(vnode: any, container: any) {
   mountElement(vnode, container);
 }
 function mountElement(vnode: any, container: any) {
-  const el:HTMLElement = vnode.el= document.createElement(vnode.type);
-  const { children,shapeFlag } = vnode;
+  const el: HTMLElement = (vnode.el = document.createElement(vnode.type));
+  const { children, shapeFlag } = vnode;
   if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
     // 文本内容直接设置
     el.textContent = children;
@@ -34,7 +34,13 @@ function mountElement(vnode: any, container: any) {
   const { props } = vnode;
   for (const key in props) {
     const element = props[key];
-    el.setAttribute(key, element);
+    const isOn = (key: string) => /^on[A-Z]/.test(key);
+    if (isOn(key)) {
+      const evnet = key.slice(2).toLowerCase();
+      el.addEventListener(evnet, element);
+    } else {
+      el.setAttribute(key, element);
+    }
   }
   container.append(el);
 }
@@ -54,13 +60,13 @@ function mountComponent(initalVnode: any, container) {
   // 创建组件实例
   const instance = createComponentInstance(initalVnode);
   setupComponent(instance);
-  setupRederEffect(instance,initalVnode, container);
+  setupRederEffect(instance, initalVnode, container);
 }
 
-function setupRederEffect(instance: any,initalVnode, container) {
-  const {proxy} = instance
+function setupRederEffect(instance: any, initalVnode, container) {
+  const { proxy } = instance;
   const subTree = instance.render.call(proxy);
   // subTree h函数返回的内容
   patch(subTree, container);
-  initalVnode.el = subTree.el // 把根节点的el保存到当前组件的虚拟节点上 用于this.$el访问
+  initalVnode.el = subTree.el; // 把根节点的el保存到当前组件的虚拟节点上 用于this.$el访问
 }

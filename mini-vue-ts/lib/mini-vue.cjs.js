@@ -100,7 +100,7 @@ function processElement(vnode, container) {
     mountElement(vnode, container);
 }
 function mountElement(vnode, container) {
-    const el = vnode.el = document.createElement(vnode.type);
+    const el = (vnode.el = document.createElement(vnode.type));
     const { children, shapeFlag } = vnode;
     if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
         // 文本内容直接设置
@@ -114,7 +114,14 @@ function mountElement(vnode, container) {
     const { props } = vnode;
     for (const key in props) {
         const element = props[key];
-        el.setAttribute(key, element);
+        const isOn = (key) => /^on[A-Z]/.test(key);
+        if (isOn(key)) {
+            const evnet = key.slice(2).toLowerCase();
+            el.addEventListener(evnet, element);
+        }
+        else {
+            el.setAttribute(key, element);
+        }
     }
     container.append(el);
 }
