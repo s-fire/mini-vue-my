@@ -10,14 +10,116 @@ var ShapeFlags;
     ShapeFlags[ShapeFlags["ARRAY_CHILDREN"] = 8] = "ARRAY_CHILDREN";
 })(ShapeFlags || (ShapeFlags = {}));
 
+const isObject = (val) => {
+    return val !== null && typeof val === "object";
+};
+const extend = Object.assign;
+const hasOwn = (val, key) => Object.prototype.hasOwnProperty.call(val, key);
+
+const targetsMap = new Map();
+function triggerEffects(dep) {
+    dep.forEach((effect) => {
+        if (effect.scheduler) {
+            effect.scheduler();
+        }
+        else {
+            effect.run();
+        }
+    });
+}
+function trigger(target, key) {
+    let depsMap = targetsMap.get(target);
+    if (!depsMap) {
+        return;
+    }
+    let dep = depsMap.get(key);
+    if (dep) {
+        triggerEffects(dep);
+    }
+}
+
+const get = createGetter();
+const set = createSetter();
+const readOnlyGet = createGetter(true);
+const shallowReadonlyGet = createGetter(true, true);
+function createGetter(isReadonly = false, isShallow = false) {
+    return function get(target, key) {
+        if (key === ReactiveFlags.IS_REACTIVE) {
+            // 此时是在调用isReactive
+            return !isReadonly;
+        }
+        else if (key === ReactiveFlags.IS_READONLY) {
+            return isReadonly;
+        }
+        const res = Reflect.get(target, key);
+        if (isShallow) {
+            return res;
+        }
+        if (isObject(res)) {
+            return isReadonly ? readonly(res) : reactive(res);
+        }
+        return res;
+    };
+}
+function createSetter() {
+    return function set(target, key, value) {
+        const res = Reflect.set(target, key, value);
+        trigger(target, key);
+        return res;
+    };
+}
+const mutableHandles = {
+    get: get,
+    set: set,
+};
+const readonlyHandles = {
+    get: readOnlyGet,
+    set(target, key, value) {
+        console.warn(`readonly not able to set`);
+        return true;
+    },
+};
+const shallowReadonlyHandles = extend({}, readonlyHandles, {
+    get: shallowReadonlyGet,
+});
+
+var ReactiveFlags;
+(function (ReactiveFlags) {
+    ReactiveFlags["IS_REACTIVE"] = "__v_isReactive";
+    ReactiveFlags["IS_READONLY"] = "__v_isRadonly";
+})(ReactiveFlags || (ReactiveFlags = {}));
+function reactive(raw) {
+    return createReactiveObj(raw, mutableHandles);
+}
+function readonly(raw) {
+    return createReactiveObj(raw, readonlyHandles);
+}
+function createReactiveObj(raw, baseHandles) {
+    if (!isObject(raw)) {
+        console.warn(`target ${raw}必须是一个对象`);
+        return raw;
+    }
+    return new Proxy(raw, baseHandles);
+}
+function shallowReadonly(raw) {
+    return createReactiveObj(raw, shallowReadonlyHandles);
+}
+
+function initProps(instance, rawProps) {
+    instance.props = rawProps || {};
+}
+
 const publicPropertiesMap = {
     $el: (i) => i.vnode.el
 };
 const publicInstanceProxyHandlers = {
     get({ _: instance }, key) {
-        const { setupState } = instance;
-        if (key in setupState) {
+        const { setupState, props } = instance;
+        if (hasOwn(setupState, key)) {
             return setupState[key];
+        }
+        else if (hasOwn(props, key)) {
+            return props[key];
         }
         const publicGetter = publicPropertiesMap[key];
         if (publicGetter) {
@@ -30,7 +132,8 @@ function createComponentInstance(vnode) {
     const component = {
         vnode,
         type: vnode.type,
-        setupState: {} // 保存setup的返回内容
+        setupState: {},
+        props: {}
     };
     return component;
 }
@@ -41,8 +144,10 @@ function setupComponent(instance) {
           type // 传入的App组件配置
         }
         type // 传入的App组件配置
+        props
       }
     */
+    initProps(instance, instance.vnode.props);
     // 实例化有状态组件
     setupStatefulComponent(instance);
 }
@@ -61,7 +166,7 @@ function setupStatefulComponent(instance) {
     // 取到App里的setup函数
     const { setup } = Component;
     if (setup) {
-        const setupResult = setup();
+        const setupResult = setup(shallowReadonly(instance.props)); // 把props传给setup函数
         handleSetupResult(instance, setupResult);
     }
 }

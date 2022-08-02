@@ -1,3 +1,4 @@
+import { isObject } from "../shared";
 import {
   mutableHandles,
   readonlyHandles,
@@ -14,6 +15,10 @@ export function readonly(raw) {
   return createReactiveObj(raw, readonlyHandles);
 }
 function createReactiveObj(raw: any, baseHandles) {
+  if (!isObject(raw)) {
+    console.warn(`target ${raw}必须是一个对象`);
+    return raw
+  }
   return new Proxy(raw, baseHandles);
 }
 export function isReactive(raw) {

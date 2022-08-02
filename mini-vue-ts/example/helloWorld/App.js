@@ -1,15 +1,18 @@
 import { h } from "../../lib/mini-vue.esm.js";
-window.self =null
+import { Foo } from "./Foo.js";
+window.self = null;
 export const App = {
+  name:'APP',
   render() {
-    window.self=this
+    window.self = this;
     return h(
       "div",
       {
         id: "root",
         class: ["red", "hard"],
       },
-      'hi '+this.msg
+      [h("div", {}, "hi " + this.msg), h(Foo, { count: 1 })]
+      // 'hi '+this.msg
       // string
       // "hi,mini-vue"
       // array
@@ -22,7 +25,7 @@ export const App = {
   },
   setup() {
     return {
-      msg: "mini-vue",
+      msg: "mini-vue1",
     };
   },
 };
