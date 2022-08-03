@@ -1,4 +1,5 @@
 import { shallowReadonly } from "../reactive/reactive"
+import { emit } from "./componentEmits"
 import { initProps } from "./componentProps"
 import { publicInstanceProxyHandlers } from "./componentPublicInstance"
 
@@ -7,8 +8,10 @@ export function createComponentInstance(vnode) {
     vnode,
     type:vnode.type,
     setupState:{}, // 保存setup的返回内容
-    props:{}
+    props:{},
+    emit:()=>{}
   }
+  component.emit = emit.bind(null,component) as any  // bind解决调用emit时只需要传入事件名，不需要再传instance
   return component
 }
 export function setupComponent(instance: { vnode: any }) {
@@ -41,7 +44,9 @@ function setupStatefulComponent(instance: any) {
   // 取到App里的setup函数
   const {setup} = Component
   if (setup) {
-    const setupResult = setup(shallowReadonly(instance.props)) // 把props传给setup函数
+    const setupResult = setup(shallowReadonly(instance.props),{
+      emit:instance.emit
+    }) // 把props传给setup函数
     handleSetupResult(instance,setupResult)
   }
 }

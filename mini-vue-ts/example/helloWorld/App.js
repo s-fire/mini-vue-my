@@ -2,7 +2,7 @@ import { h } from "../../lib/mini-vue.esm.js";
 import { Foo } from "./Foo.js";
 window.self = null;
 export const App = {
-  name:'APP',
+  name: "APP",
   render() {
     window.self = this;
     return h(
@@ -10,14 +10,25 @@ export const App = {
       {
         id: "root",
         class: ["red", "hard"],
-        onClick() {
-          console.log("click");
-        },
-        onMousedown() {
-          console.log("mouseDown");
-        },
+        // onClick() {
+        //   console.log("click");
+        // },
+        // onMousedown() {
+        //   console.log("mouseDown");
+        // },
       },
-      [h("div", {}, "hi " + this.msg), h(Foo, { count: 1 })]
+      [
+        h("div", {}, "hi " + this.msg),
+        h(Foo, {
+          count: 1,
+          onAdd(a, b) {
+            console.log("onAdd", a, b);
+          },
+          onAddFoo(){
+            console.log("onAddFoo");
+          }
+        }),
+      ]
       // 'hi '+this.msg
       // string
       // "hi,mini-vue"

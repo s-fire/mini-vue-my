@@ -11,6 +11,17 @@ const isObject = (val) => {
 };
 const extend = Object.assign;
 const hasOwn = (val, key) => Object.prototype.hasOwnProperty.call(val, key);
+const capitalize = (str) => {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+};
+const camelize = (str) => {
+    return str.replace(/-(\w)/g, (_, c) => {
+        return c ? c.toUpperCase() : '';
+    });
+};
+const toHandlerKey = (str) => {
+    return str ? 'on' + capitalize(str) : '';
+};
 
 const targetsMap = new Map();
 function triggerEffects(dep) {
@@ -101,6 +112,13 @@ function shallowReadonly(raw) {
     return createReactiveObj(raw, shallowReadonlyHandles);
 }
 
+function emit(instance, event, ...args) {
+    const { props } = instance;
+    const handlerName = toHandlerKey(camelize(event));
+    const handler = props[handlerName];
+    handler && handler(...args);
+}
+
 function initProps(instance, rawProps) {
     instance.props = rawProps || {};
 }
@@ -129,8 +147,10 @@ function createComponentInstance(vnode) {
         vnode,
         type: vnode.type,
         setupState: {},
-        props: {}
+        props: {},
+        emit: () => { }
     };
+    component.emit = emit.bind(null, component); // bind解决调用emit时只需要传入事件名，不需要再传instance
     return component;
 }
 function setupComponent(instance) {
@@ -162,7 +182,9 @@ function setupStatefulComponent(instance) {
     // 取到App里的setup函数
     const { setup } = Component;
     if (setup) {
-        const setupResult = setup(shallowReadonly(instance.props)); // 把props传给setup函数
+        const setupResult = setup(shallowReadonly(instance.props), {
+            emit: instance.emit
+        }); // 把props传给setup函数
         handleSetupResult(instance, setupResult);
     }
 }
