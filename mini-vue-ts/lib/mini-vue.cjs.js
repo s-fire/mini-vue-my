@@ -186,9 +186,11 @@ function setupStatefulComponent(instance) {
     // 取到App里的setup函数
     const { setup } = Component;
     if (setup) {
+        setCurrentInstance(instance);
         const setupResult = setup(shallowReadonly(instance.props), {
             emit: instance.emit
         }); // 把props传给setup函数
+        setCurrentInstance(null);
         handleSetupResult(instance, setupResult);
     }
 }
@@ -205,6 +207,13 @@ function finishComponentSetup(instance) {
     if (Component.render) {
         instance.render = Component.render;
     }
+}
+let currentInstance = null;
+function getCurrentInstance() {
+    return currentInstance;
+}
+function setCurrentInstance(instance) {
+    currentInstance = instance;
 }
 
 function render(vnode, container) {
@@ -328,5 +337,6 @@ function h(type, props, children) {
 }
 
 exports.createApp = createApp;
+exports.getCurrentInstance = getCurrentInstance;
 exports.h = h;
 //# sourceMappingURL=mini-vue.cjs.js.map

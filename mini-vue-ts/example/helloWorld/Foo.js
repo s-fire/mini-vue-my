@@ -1,6 +1,7 @@
-import { h } from "../../lib/mini-vue.esm.js";
+import { h,getCurrentInstance } from "../../lib/mini-vue.esm.js";
 export const Foo = {
-  setup(props,{emit}) {
+  setup(props,{emit}) {    const instance = getCurrentInstance()
+    console.log('instance: ', instance);
     console.log('props: ', props);
     const emitAdd = ()=>{
       console.log('clickEmitAdd');

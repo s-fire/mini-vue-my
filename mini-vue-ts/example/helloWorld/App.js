@@ -1,4 +1,4 @@
-import { h } from "../../lib/mini-vue.esm.js";
+import { h,getCurrentInstance } from "../../lib/mini-vue.esm.js";
 import { Foo } from "./Foo.js";
 window.self = null;
 export const App = {
@@ -41,6 +41,8 @@ export const App = {
     );
   },
   setup() {
+    const instance = getCurrentInstance()
+    console.log('instance: ', instance);
     return {
       msg: "mini-vue1",
     };
